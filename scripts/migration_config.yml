@@ -1,25 +1,29 @@
-oracle_configuration: 
- username: username_of_db
- password: password_of_db_user
- ip: ip_address_for_db
- instance: instance_name_for_db
+# Migration example file.
+oracle_configuration:
+  username: username_of_db
+  password: password_of_db_user
+  dsn: tnsname_alias
+
 mongo_server:
- ip: ip_address_for_mongo
- port: 27017
- collection: collection_name_for_mongo
+  username: mongo_user
+  password: mongo_pwd
+  host: mongo_host
+  db: mongo_db
+  auth_source: mongo_auth_source
+  port: mongo_port
+
 tables:
-- table_name: dbuser.table_name
-  collectionName: mongo_collection_name
-  columns:
-    ID: id
-    ACTIVATION_DATE: activationDate
-    DEACTIVATION_DATE: deactivationDate
-    IS_ACTIVE: active
-    LOCATION: location
-    ORDERS: orders
-- table_name: dbuser.another_username
-  collectionName: mongo_another_collection_name
-  columns:
-    NO: id
-    ADI: name
-    ACIKLAMA: description
+  -
+    table_name: dbuser.table_name
+    query: SELECT COLUMN1, COLUMN2 FROM dbuser.table_name
+    collectionName: mongo_target_collection
+    columns:
+      COLUMN1: column1
+      COLUMN2: column2
+  -
+    table_name: dbuser.table_name2
+    query: SELECT COLUMN1, COLUMN2 FROM dbuser.table_name2
+    collectionName: mongo_target_collection2
+    columns:
+      COLUMN1: column1
+      COLUMN2: column2
