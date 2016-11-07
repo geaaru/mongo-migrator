@@ -1,4 +1,7 @@
 # Migration example file.
+import_functions:
+  pyfile: abs_path_of_script
+
 oracle_configuration:
   username: username_of_db
   password: password_of_db_user
@@ -26,4 +29,4 @@ tables:
     collectionName: mongo_target_collection2
     columns:
       COLUMN1: column1
-      COLUMN2: column2
+      COLUMN2: column2 function myscript_function
