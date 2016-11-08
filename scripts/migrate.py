@@ -10,6 +10,10 @@ import cx_Oracle
 
 os.environ["NLS_LANG"] = "AMERICAN_AMERICA.UTF8"
 
+class Operation:
+
+    def __init__(self):
+        self.skip_column = False
 
 class MongoMigrator:
 
@@ -38,6 +42,7 @@ class MongoMigrator:
             if elaborate_data:
                 elabnames = []
                 new_row = []
+                skip_column = False
                 for c in row:
                     # print(c)
                     split = colnames[i].split()
@@ -50,16 +55,23 @@ class MongoMigrator:
                             method = getattr(self.import_pkg, split[2])
                             if not method:
                                 raise Exception('Function \'%s\' not found' % split[2])
+                            op = Operation()
+                            res = method(c, mongo_column=split[0],
+                                         row=row,
+                                         configuration=self.configuration,
+                                         mongoClient=self.mongoClient,
+                                         oracleConnection=self.oracleConnection,
+                                         operator=op)
+                            if op.skip_column:
+                                skip_column = True
+                            else:
+                                new_row.append(res)
 
-                            new_row.append(method(c, mongo_column=split[0],
-                                                  row=row,
-                                                  configuration=self.configuration,
-                                                  mongoClient=self.mongoClient,
-                                                  oracleConnection=self.oracleConnection))
                     else:
                         new_row.append(c)
 
-                    elabnames.append(split[0])
+                    if not skip_column:
+                        elabnames.append(split[0])
                     i += 1
 
                 yield dict(zip(elabnames, new_row))
