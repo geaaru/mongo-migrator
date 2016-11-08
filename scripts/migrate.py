@@ -109,7 +109,7 @@ def importScript(importFile):
 
 def main():
     configuration = loadConfiguration()
-    print(configuration)
+    #print(configuration)
     pkg=None
     if 'import_functions' in configuration and 'pyfile' in configuration['import_functions']:
         pyfile = configuration['import_functions']['pyfile']
