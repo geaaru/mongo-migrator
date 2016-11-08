@@ -10,115 +10,139 @@ import cx_Oracle
 
 os.environ["NLS_LANG"] = "AMERICAN_AMERICA.UTF8"
 
-def rows_as_dicts(cursor,configuration,index, import_pkg=None):
-    """ returns cx_Oracle rows as dicts """
-    colnames = []
-    elaborate_data = False
-    for i in cursor.description:
-        if i[0] in configuration['tables'][index]['columns']:
 
-            mongo_column = configuration['tables'][index]['columns'][i[0]]
+class MongoMigrator:
 
-            if len(mongo_column.split()) > 1 and import_pkg:
-                elaborate_data = True
+    def __init__(self):
+        self.mongoClient = None
+        self.oracleConnection = None
+        self.configuration = None
+        self.import_pkg = None
 
-            colnames.append(mongo_column)
+    def rows_as_dicts(self, cursor, index):
+        """ returns cx_Oracle rows as dicts """
+        colnames = []
+        elaborate_data = False
+        for i in cursor.description:
+            if i[0] in self.configuration['tables'][index]['columns']:
 
-    for row in cursor:
-        i=0
-        if elaborate_data:
-            elabnames=[]
-            new_row=[]
-            for c in row:
-                #print(c)
-                split = colnames[i].split()
-                if len(split) > 1:
-                    if split[1] == 'function':
+                mongo_column = self.configuration['tables'][index]['columns'][i[0]]
 
-                        if not import_pkg:
-                            raise Exception('No import script available!')
+                if len(mongo_column.split()) > 1 and self.import_pkg:
+                    elaborate_data = True
 
-                        method = getattr(import_pkg, split[2])
-                        if not method:
-                            raise Exception('Function \'%s\' not found' % split[2])
+                colnames.append(mongo_column)
 
-                        new_row.append(method(c, mongo_column=split[0],
-                                              row=row, configuration=configuration))
-                else:
-                    new_row.append(c)
+        for row in cursor:
+            i = 0
+            if elaborate_data:
+                elabnames = []
+                new_row = []
+                for c in row:
+                    # print(c)
+                    split = colnames[i].split()
+                    if len(split) > 1:
+                        if split[1] == 'function':
 
-                elabnames.append(split[0])
-                i += 1
+                            if not self.import_pkg:
+                                raise Exception('No import script available!')
 
-            yield dict(zip(elabnames, new_row))
-        else:
-            yield dict(zip(colnames, row))
+                            method = getattr(self.import_pkg, split[2])
+                            if not method:
+                                raise Exception('Function \'%s\' not found' % split[2])
 
-def readFromOracle(configuration,index, import_pkg=None):
+                            new_row.append(method(c, mongo_column=split[0],
+                                                  row=row,
+                                                  configuration=self.configuration,
+                                                  mongoClient=self.mongoClient,
+                                                  oracleConnection=self.oracleConnection))
+                    else:
+                        new_row.append(c)
 
-    oracleConnection = cx_Oracle.connect(configuration['oracle_configuration']['username'] + "/" +
-                                         configuration['oracle_configuration']['password'] + "@" +
-                                         configuration['oracle_configuration']['dsn'])
+                    elabnames.append(split[0])
+                    i += 1
 
-    table_name = configuration['tables'][index]['table_name']
-    query = configuration['tables'][index]['query']
-    print('Retrieve data for table', table_name, 'with query', query)
+                yield dict(zip(elabnames, new_row))
+            else:
+                yield dict(zip(colnames, row))
 
-    oracleCursor = oracleConnection.cursor()
-    oracleCursor.execute(configuration['tables'][index]['query'])
+    def read_from_oracle(self, index):
 
-    return rows_as_dicts(oracleCursor,configuration,index,import_pkg=import_pkg)
+        table_name = self.configuration['tables'][index]['table_name']
+        query = self.configuration['tables'][index]['query']
+        print('Retrieve data for table', table_name, 'with query', query)
 
-def insertMongo(data,configuration,index):
-    mongoClient = MongoClient('mongodb://%s:%s@%s:%d/%s?authSource=%s' % (
-                              configuration['mongo_server']['username'],
-                              configuration['mongo_server']['password'],
-                              configuration['mongo_server']['host'],
-                              configuration['mongo_server']['port'],
-                              configuration['mongo_server']['db'],
-                              configuration['mongo_server']['auth_source']))
-    db = mongoClient[configuration['mongo_server']['db']]
-    for i in data:
-        db[configuration['tables'][index]['collectionName']].insert(i)
+        oracle_cursor = self.oracleConnection.cursor()
+        oracle_cursor.execute(self.configuration['tables'][index]['query'])
 
-    print("Number of records migrated to Mongo :",
-          db[configuration['tables'][index]['collectionName']].count())
+        return self.rows_as_dicts(oracle_cursor, index)
 
-def loadConfiguration():
-    """ loads yml configuration file"""
-    if len(argv) != 2:
-        print("Missing config file argoment")
-        print('Use ', argv[0], ' config.conf')
-        exit(1)
+    @staticmethod
+    def load_configuration(filename):
+        """ loads yml configuration file"""
 
-    filename = argv[1]
-    f = open(filename)
-    configuration = yaml.safe_load(f)
-    f.close()
+        f = open(filename)
+        configuration = yaml.safe_load(f)
+        f.close()
 
-    #print(yaml.dump(configuration))
+        return configuration
 
-    return configuration
+    @staticmethod
+    def import_script(import_file):
 
-def importScript(importFile):
+        path.insert(0, os.path.dirname(import_file))
+        f = os.path.basename(import_file)
+        f = f.replace('.py', '')
+        return __import__(f)
 
-    path.insert(0, os.path.dirname(importFile))
-    f = os.path.basename(importFile)
-    f = f.replace('.py', '')
-    return __import__(f)
+    def insert_mongo(self, data, index):
+        db = self.mongoClient[self.configuration['mongo_server']['db']]
+        for i in data:
+            db[self.configuration['tables'][index]['collectionName']].insert(i)
+
+        print("Number of records migrated to Mongo :",
+              db[self.configuration['tables'][index]['collectionName']].count())
+
+    def main(self):
+
+        if len(argv) != 2:
+            print("Missing config file argoment")
+            print('Use ', argv[0], ' config.conf')
+            exit(1)
+
+        self.configuration = self.load_configuration(argv[1])
+
+        # print(configuration)
+        if 'import_functions' in self.configuration and 'pyfile' in self.configuration['import_functions']:
+            pyfile = self.configuration['import_functions']['pyfile']
+            self.import_pkg = self.import_script(pyfile)
+
+        # Create connection to oracle
+        self.oracleConnection = cx_Oracle.connect(self.configuration['oracle_configuration']['username'] + "/" +
+                                                  self.configuration['oracle_configuration']['password'] + "@" +
+                                                  self.configuration['oracle_configuration']['dsn'])
+
+        self.mongoClient = MongoClient('mongodb://%s:%s@%s:%d/%s?authSource=%s' % (
+                                       self.configuration['mongo_server']['username'],
+                                       self.configuration['mongo_server']['password'],
+                                       self.configuration['mongo_server']['host'],
+                                       self.configuration['mongo_server']['port'],
+                                       self.configuration['mongo_server']['db'],
+                                       self.configuration['mongo_server']['auth_source']))
+        # TODO: add check of the connections
+
+        # Execute migration for any table of the configuration file.
+        for index in range(len(self.configuration['tables'])):
+            print("Table to be migrated :" + self.configuration['tables'][index]['table_name'])
+            data = self.read_from_oracle(index)
+            self.insert_mongo(data, index)
+
+        exit(0)
+
 
 def main():
-    configuration = loadConfiguration()
-    #print(configuration)
-    pkg=None
-    if 'import_functions' in configuration and 'pyfile' in configuration['import_functions']:
-        pyfile = configuration['import_functions']['pyfile']
-        pkg = importScript(pyfile)
-
-    for index in range(len(configuration['tables'])):
-        print("Table to be migrated :" + configuration['tables'][index]['table_name'])
-        data   = readFromOracle(configuration,index, import_pkg=pkg)
-        result = insertMongo(data,configuration,index)
+    m = MongoMigrator()
+    m.main()
 
 if __name__ == "__main__":
     main()
