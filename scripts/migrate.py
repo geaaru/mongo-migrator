@@ -30,7 +30,7 @@ def rows_as_dicts(cursor,configuration,index, import_pkg=None):
             elabnames=[]
             new_row=[]
             for c in row:
-                print(c)
+                #print(c)
                 split = colnames[i].split()
                 if len(split) > 1:
                     if split[1] == 'function':
@@ -42,7 +42,8 @@ def rows_as_dicts(cursor,configuration,index, import_pkg=None):
                         if not method:
                             raise Exception('Function \'%s\' not found' % split[2])
 
-                        new_row.append(method(c))
+                        new_row.append(method(c, mongo_column=split[0],
+                                              row=row, configuration=configuration))
                 else:
                     new_row.append(c)
 
