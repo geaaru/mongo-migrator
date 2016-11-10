@@ -3,6 +3,7 @@
 def parser_field(field, row=None, configuration=None,
                  mongo_column=None,
                  oracleConnection=None,
+                 mongoClient=None,
                  operator=None):
 
     print("Handle field", field, ' of column', mongo_column)

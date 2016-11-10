@@ -42,9 +42,9 @@ class MongoMigrator:
             if elaborate_data:
                 elabnames = []
                 new_row = []
-                skip_column = False
                 for c in row:
                     # print(c)
+                    skip_column = False
                     split = colnames[i].split()
                     if len(split) > 1:
                         if split[1] == 'function':
