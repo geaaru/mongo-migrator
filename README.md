@@ -91,7 +91,7 @@ table_name: dbuser.table_name2
     collectionName: mongo_target_collection2
     columns:
       COLUMN1: column1
-      COLUMN2: column2 function myscript_function
+      COLUMN2: column2 function parser_field
 ````
 
 And python custom function:
