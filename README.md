@@ -53,27 +53,64 @@ Example of migration script
 
 Oracle connection configuration:
 
-> oracle_configuration:
->   username: username_of_db
->   password: password_of_db_user
->   dsn: tnsname_alias
+````yaml
+oracle_configuration:
+   username: username_of_db
+   password: password_of_db_user
+   dsn: tnsname_alias
+````
 
 Mongo connection configuration:
 
-> mongo_server:
->   username: mongo_user
->   password: mongo_pwd
->   host: mongo_host
->   db: mongo_db
->   auth_source: mongo_auth_source
->   port: mongo_port
+````yaml
+mongo_server:
+   username: mongo_user
+   password: mongo_pwd
+   host: mongo_host
+   db: mongo_db
+   auth_source: mongo_auth_source
+   port: mongo_port
+````
 
 Migration command:
 
->    table_name: dbuser.table_name
->    query: SELECT COLUMN1, COLUMN2 FROM dbuser.table_name
->    collectionName: mongo_target_collection
->    columns:
->      COLUMN1: column1
->      COLUMN2: column2
+````yaml
+table_name: dbuser.table_name
+    query: SELECT COLUMN1, COLUMN2 FROM dbuser.table_name
+    collectionName: mongo_target_collection
+    columns:
+      COLUMN1: column1
+      COLUMN2: column2
+````
 
+Migration command with custom Python function:
+
+````yaml
+table_name: dbuser.table_name2
+    query: SELECT COLUMN1, COLUMN2 FROM dbuser.table_name2
+    collectionName: mongo_target_collection2
+    columns:
+      COLUMN1: column1
+      COLUMN2: column2 function myscript_function
+````
+
+And python custom function:
+
+````python
+def parser_field(field, row=None, configuration=None,
+                 mongo_column=None,
+                 oracleConnection=None,
+                 mongoClient=None,
+                 operator=None):
+
+    print("Handle field", field, ' of column', mongo_column)
+
+    # skip operator
+    # if op:
+    #    op.skip_column = True
+
+    ans = '%s changed' % field
+
+    # Return value to store
+    return ans
+````
