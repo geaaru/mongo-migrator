@@ -42,9 +42,38 @@ In order to use and migrate data it is needed a YAML Configuration file where ar
 
 In order to execute migration script it is needed define a query to execute and where is possible:
 
-    - identify target column (or key) of the mongo collection where a particular value of a column from Oracle database is stored. Note: it is important correct order from Oracle query and columns defined on migration script. For example if I want store value of COLUMN1 from Oracle to `column1` of mongo collection, configuration file will be write with "COLUMN1: column1".
-    - configure execution of custom function for any rows. For example for Oracle COLUMN1 it is possible elaborate data and store it on `column2` with an option like this:
+* identify target column (or key) of the mongo collection where a particular value of a column from Oracle database is stored. Note: it is important correct order from Oracle query and columns defined on migration script. For example if I want store value of COLUMN1 from Oracle to `column1` of mongo collection, configuration file will be write with "COLUMN1: column1".
+
+* configure execution of custom function for any rows. For example for Oracle COLUMN1 it is possible elaborate data and store it on `column2` with an option like this:
         COLUMN2: column2 function myscript_function
 
 
+Example of migration script
+----------------------------
+
+Oracle connection configuration:
+
+> oracle_configuration:
+>   username: username_of_db
+>   password: password_of_db_user
+>   dsn: tnsname_alias
+
+Mongo connection configuration:
+
+> mongo_server:
+>   username: mongo_user
+>   password: mongo_pwd
+>   host: mongo_host
+>   db: mongo_db
+>   auth_source: mongo_auth_source
+>   port: mongo_port
+
+Migration command:
+
+>    table_name: dbuser.table_name
+>    query: SELECT COLUMN1, COLUMN2 FROM dbuser.table_name
+>    collectionName: mongo_target_collection
+>    columns:
+>      COLUMN1: column1
+>      COLUMN2: column2
 
