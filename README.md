@@ -106,8 +106,8 @@ def parser_field(field, row=None, configuration=None,
     print("Handle field", field, ' of column', mongo_column)
 
     # skip operator
-    # if op:
-    #    op.skip_column = True
+    # if operator:
+    #    operator.skip_column = True
 
     ans = '%s changed' % field
 

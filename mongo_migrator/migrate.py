@@ -100,6 +100,9 @@ class MongoMigrator:
                 if len(mongo_column.split()) > 1 and self.import_pkg:
                     elaborate_data = True
 
+                self.logger.debug('For column %s use mongo_column %s' %
+                                  (i[0],
+                                   mongo_column))
                 colnames.append(mongo_column)
 
         for row in cursor:
@@ -129,11 +132,14 @@ class MongoMigrator:
                                          operator=op)
                             if op.skip_column:
                                 skip_column = True
+                                self.logger.debug('Skip column %s' % split[0])
                             else:
                                 new_row.append(res)
+                                self.logger.debug('For mongo_column %s => %s' % (split[0], res))
 
                     else:
                         new_row.append(c)
+                        self.logger.debug('For mongo_column %s => %s' % (split[0], c))
 
                     if not skip_column:
                         elabnames.append(split[0])
