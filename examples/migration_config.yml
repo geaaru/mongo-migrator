@@ -1,6 +1,6 @@
 # Migration example file.
 import_functions:
-  pyfile: abs_path_of_script
+  pyfile: abs_path_or_relpath_of_script
 
 oracle_configuration:
   username: username_of_db

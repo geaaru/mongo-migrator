@@ -1,4 +1,6 @@
 #!/usr/bin/python
+# Author(s): Geaaru <geaaru@gmail.com>
+# Based of code of bist (https://github.com/bist/mongo-migrator)
 
 # -*- coding: utf-8 -*-
 from pymongo import MongoClient
@@ -24,6 +26,7 @@ class Operation:
 class MongoMigrator:
 
     def __init__(self):
+        self.configfile = None
         self.mongoClient = None
         self.oracleConnection = None
         self.configuration = None
@@ -54,6 +57,11 @@ class MongoMigrator:
                                default=None,
                                dest='log_file',
                                help='Log file to use for trace migration operation. (Optional).')
+        self.parser.add_option('-s', '--script-dir',
+                               action='store',
+                               default=None,
+                               dest='script_dir',
+                               help='Script directory path where find file with custom import functions. (Optional)')
         self.parser.add_option('-q', '--quiet',
                                action='store_true',
                                default=False,
@@ -185,10 +193,16 @@ class MongoMigrator:
 
         return configuration
 
-    @staticmethod
-    def import_script(import_file):
+    def import_script(self, import_file):
 
-        path.insert(0, os.path.dirname(import_file))
+        if os.path.isabs(import_file):
+            path.insert(0, os.path.dirname(import_file))
+        elif self.script_dir:
+            path.insert(0, self.script_dir)
+        else:
+            # Use current path os configuration file.
+            path.insert(0, os.path.dirname(self.configfile))
+
         f = os.path.basename(import_file)
         f = f.replace('.py', '')
         return __import__(f)
@@ -206,25 +220,7 @@ class MongoMigrator:
                          n_rec,
                          "--------------------------------------------------------------------------------------")
 
-    def main(self):
-
-        # Parse command line
-        (options, args) = self.parser.parse_args()
-
-        if options.config is None:
-            self.parser.error('Missing mandatory configuration file option. Use --help for help message')
-
-        if options.quiet:
-            self.log_on_stdout = False
-
-        if options.log_file:
-            self.log_file = options.log_file
-
-        if options.log_level:
-            self.log_level = options.log_level
-
-        self.init_logging()
-        self.configuration = self.load_configuration(options.config)
+    def migrate(self):
 
         # print(configuration)
         if 'import_functions' in self.configuration and 'pyfile' in self.configuration['import_functions']:
@@ -237,12 +233,12 @@ class MongoMigrator:
                                                   self.configuration['oracle_configuration']['dsn'])
 
         self.mongoClient = MongoClient('mongodb://%s:%s@%s:%d/%s?authSource=%s' % (
-                                       self.configuration['mongo_server']['username'],
-                                       self.configuration['mongo_server']['password'],
-                                       self.configuration['mongo_server']['host'],
-                                       self.configuration['mongo_server']['port'],
-                                       self.configuration['mongo_server']['db'],
-                                       self.configuration['mongo_server']['auth_source']))
+            self.configuration['mongo_server']['username'],
+            self.configuration['mongo_server']['password'],
+            self.configuration['mongo_server']['host'],
+            self.configuration['mongo_server']['port'],
+            self.configuration['mongo_server']['db'],
+            self.configuration['mongo_server']['auth_source']))
         # TODO: add check of the connections
 
         # Execute migration for any table of the configuration file.
@@ -261,6 +257,34 @@ class MongoMigrator:
                              "--------------------------------------------------------------------------------------",
                              self.configuration['tables'][index]['table_name'],
                              "======================================================================================")
+
+    def main(self):
+
+        # Parse command line
+        (options, args) = self.parser.parse_args()
+
+        if options.config is None:
+            self.parser.error('Missing mandatory configuration file option. Use --help for help message')
+
+        if options.quiet:
+            self.log_on_stdout = False
+
+        if options.log_file:
+            self.log_file = options.log_file
+
+        if options.log_level:
+            self.log_level = options.log_level
+
+        if options.script_dir:
+            if not os.path.isabs(options.script_dir):
+                self.parser.error('Script directory option must an absolute path!')
+            self.script_dir = options.script_dir
+
+        self.configfile = options.config
+        self.init_logging()
+        self.configuration = self.load_configuration(options.config)
+
+        self.migrate()
 
         exit(0)
 
