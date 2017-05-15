@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 from mongo_migrator import __version__
 
 setup(
-        name='mongo',
+        name='mongo-migrator',
         version=__version__,
         description='Mongo Migrator',
         author='Geaaru',
