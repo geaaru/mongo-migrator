@@ -100,6 +100,7 @@ And python custom function:
 def parser_field(field, row=None, configuration=None,
                  mongo_column=None,
                  oracleConnection=None,
+                 context=None,
                  mongoClient=None,
                  operator=None):
 
@@ -110,6 +111,10 @@ def parser_field(field, row=None, configuration=None,
     #    operator.skip_column = True
 
     ans = '%s changed' % field
+
+    # Store context field for retrieve it on
+    # next raw
+    context['my_reusable_obj'] = 'XXXX'
 
     # Return value to store
     return ans
