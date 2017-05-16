@@ -4,6 +4,7 @@ def parser_field(field, row=None, configuration=None,
                  mongo_column=None,
                  oracleConnection=None,
                  mongoClient=None,
+                 context=None,
                  operator=None):
 
     print("Handle field", field, ' of column', mongo_column)
@@ -13,6 +14,10 @@ def parser_field(field, row=None, configuration=None,
     #    op.skip_column = True
 
     ans = '%s changed' % field
+
+    # Store context field for retrieve it on
+    # next raw
+    context['my_reusable_obj'] = 'XXXX'
 
     # Return value to store
     return ans

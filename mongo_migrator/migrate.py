@@ -35,6 +35,8 @@ class MongoMigrator:
         self.logger = None
         self.log_on_stdout = True
         self.log_level = 'INFO'
+        # Use for store instance data
+        self.context = {}
 
         # Configuration of command line parser.
         self.parser = optparse.OptionParser(
@@ -137,6 +139,7 @@ class MongoMigrator:
                                          configuration=self.configuration,
                                          mongoClient=self.mongoClient,
                                          oracleConnection=self.oracleConnection,
+                                         context=self.context,
                                          operator=op)
                             if op.skip_column:
                                 skip_column = True
@@ -219,6 +222,9 @@ class MongoMigrator:
                          self.configuration['tables'][index]['collectionName'],
                          n_rec,
                          "--------------------------------------------------------------------------------------")
+
+    def get_context(self):
+        return self.context
 
     def migrate(self):
 

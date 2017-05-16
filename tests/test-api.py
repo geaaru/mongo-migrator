@@ -55,8 +55,17 @@ def testApi2():
 
     # Set script directory to avoid check of configfile attribute
     migrator.script_dir = './examples/'
+
+    # Set log level
+    migrator.log_level = 'DEBUG'
+    # Active stdout logging
+    migrator.log_on_stdout = True
+
+    # Init logging
+    migrator.init_logging()
+
     # Load configuration from file
-    migrator.load_configuration('../examples/migration_config.yml')
+    migrator.configuration = migrator.load_configuration('../examples/migration_config.yml')
 
     # Do some changes to query
     old_query = migrator.configuration['tables'][0]['query']
