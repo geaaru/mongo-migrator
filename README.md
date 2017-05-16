@@ -119,3 +119,10 @@ def parser_field(field, row=None, configuration=None,
     # Return value to store
     return ans
 ````
+
+
+Commercial Support
+--------------------
+
+For technical support, managed systems support, custom deployments, sponsored
+feature development many other commercial services contact me directly.
