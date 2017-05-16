@@ -113,7 +113,7 @@ def parser_field(field, row=None, configuration=None,
     ans = '%s changed' % field
 
     # Store context field for retrieve it on
-    # next raw
+    # next row
     context['my_reusable_obj'] = 'XXXX'
 
     # Return value to store
